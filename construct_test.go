@@ -7,11 +7,12 @@ import (
 )
 
 func TestConstructICMP(t *testing.T) {
-	ct := newConstructIpv4(Config{
+	cf := Config{
 		ICMP: false,
 		TCP:  false,
 		UDP:  true,
-	})
+	}
+	ct := newConstructIpv4(cf)
 	tc, err := GetTrace(&Trace{
 		SrcAddr: "10.23.228.78",
 		//SrcAddr: "172.16.57.12",
@@ -25,7 +26,7 @@ func TestConstructICMP(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	detector := newProbeIpv4()
+	detector := newProbeIpv4(cf)
 	for i := 0; i < 30; i++ {
 		tc.MaxTTL = uint8(i + 1)
 		bts, err := ct.Packet(ConstructPacket{

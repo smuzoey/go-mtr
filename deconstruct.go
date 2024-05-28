@@ -47,10 +47,11 @@ type ICMPRcv struct {
 
 type deConstructIpv4 struct {
 	deConstructMock
+	Config
 }
 
-func newDeconstructIpv4() DeConstructor {
-	dc := &deConstructIpv4{}
+func newDeconstructIpv4(conf Config) DeConstructor {
+	dc := &deConstructIpv4{Config: conf}
 	return dc
 }
 
@@ -59,19 +60,19 @@ func (dc *deConstructIpv4) DeConstruct(pkg []byte) (*ICMPRcv, error) {
 	if len(pkg) < 28 {
 		return nil, fmt.Errorf("uncomplete ICMP msg (%v)", pkg)
 	}
-	ipHeader := &headerIpv4{
-		vhl:      pkg[0],
-		tos:      pkg[1],
-		length:   binary.BigEndian.Uint16(pkg[2:4]),
-		id:       binary.BigEndian.Uint16(pkg[4:6]),
-		off:      binary.BigEndian.Uint16(pkg[6:8]),
-		ttl:      pkg[8],
-		proto:    pkg[9],
-		checkSum: binary.BigEndian.Uint16(pkg[10:12]),
-		src:      [4]byte{},
-		dst:      [4]byte{},
-	}
-	_ = ipHeader
+	//ipHeader := &headerIpv4{
+	//	vhl:      pkg[0],
+	//	tos:      pkg[1],
+	//	length:   binary.BigEndian.Uint16(pkg[2:4]),
+	//	id:       binary.BigEndian.Uint16(pkg[4:6]),
+	//	off:      binary.BigEndian.Uint16(pkg[6:8]),
+	//	ttl:      pkg[8],
+	//	proto:    pkg[9],
+	//	checkSum: binary.BigEndian.Uint16(pkg[10:12]),
+	//	src:      [4]byte{},
+	//	dst:      [4]byte{},
+	//}
+	//_ = ipHeader
 	rcv.RcvAt = time.Now()
 	controlMsgProto := pkg[20]
 	switch controlMsgProto {

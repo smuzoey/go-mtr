@@ -1,20 +1,25 @@
+//go:build !bpf
+// +build !bpf
+
 package go_mtr
 
 import (
 	"context"
-	"golang.org/x/sys/unix"
+	"fmt"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 type Receiver interface {
-	Receive() chan []byte
+	Receive() (chan *ICMPRcv, error)
 	Close()
 }
 
 type rcvMock struct{}
 
-func (r *rcvMock) Receive() chan []byte {
-	return nil
+func (r *rcvMock) Receive() (chan *ICMPRcv, error) {
+	return nil, nil
 }
 
 func (r *rcvMock) Close() {}
@@ -29,56 +34,90 @@ func newRcvIpv6() (Receiver, error) {
 
 type rcvIpv4 struct {
 	rcvMock
-	fd     int
-	ctx    context.Context
-	cancel func()
+	Config
+	fd              int
+	ctx             context.Context
+	cancel          func()
+	deConstructIpv4 DeConstructor
 }
 
-func newRcvIpv4() (Receiver, error) {
+func newRcvIpv4(conf Config) (Receiver, error) {
+	rc := &rcvIpv4{
+		Config:          conf,
+		deConstructIpv4: newDeconstructIpv4(conf),
+	}
+	return rc, nil
+}
+
+func (r *rcvIpv4) initSocket() error {
 	var err error
 	var fd int
 	fd, err = unix.Socket(unix.AF_INET, unix.SOCK_RAW, unix.IPPROTO_ICMP)
 	if err != nil {
-
-		return nil, err
+		return err
 	}
 	err = setSockOptReceiveErr(fd)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = setSockOptRcvTimeout(fd, time.Second)
+	err = setSockOptRcvTimeout(fd, time.Second*2)
+	if err != nil {
+		return err
+	}
+	err = setSockOptRcvBuff(fd, 1024*1024*32)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	r.ctx = ctx
+	r.cancel = cancel
+	r.fd = fd
+	return nil
+}
+
+func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
+	var err error
+	err = r.initSocket()
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	rc := &rcvIpv4{
-		fd:     fd,
-		ctx:    ctx,
-		cancel: cancel,
-	}
-
-	return rc, err
-}
-
-func (r *rcvIpv4) Receive() chan []byte {
-	ch := make(chan []byte, 100000)
+	ch := make(chan *ICMPRcv, 100000)
 	go func() {
 		for {
 			select {
 			case <-r.ctx.Done():
-				unix.Close(r.fd)
+				err = unix.Close(r.fd)
+				if err != nil {
+					Error(r.ErrCh, err)
+				}
+				// close ch when ctx done
+				close(ch)
 				return
 			default:
 			}
 			bts := make([]byte, 512)
-			_, _, err := unix.Recvfrom(r.fd, bts, 0)
+			_, _, err = unix.Recvfrom(r.fd, bts, 0)
 			if err != nil {
+				// Error(r.ErrCh, err)
 				continue
 			}
-			ch <- bts
+			if len(bts) > 20 && bts[20] == 8 {
+				// icmp echo should be ignored
+				continue
+			}
+			rcv, err := r.deConstructIpv4.DeConstruct(bts)
+			if err != nil {
+				Error(r.ErrCh, err)
+				continue
+			}
+			select {
+			case ch <- rcv:
+			default:
+				Error(r.ErrCh, fmt.Errorf("error: receive ch full (%v)\n", time.Now()))
+			}
 		}
 	}()
-	return ch
+	return ch, nil
 }
 
 func (r *rcvIpv4) Close() {

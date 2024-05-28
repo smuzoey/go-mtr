@@ -7,11 +7,14 @@ import (
 )
 
 type Config struct {
-	ICMP        bool
-	TCP         bool
-	UDP         bool
-	MaxUnReply  int
-	NextHopWait time.Duration
+	ICMP            bool
+	TCP             bool
+	UDP             bool
+	MaxUnReply      int
+	NextHopWait     time.Duration
+	RcvGoroutineNum int
+	ErrCh           chan error
+	BatchSize       int
 }
 
 type Trace struct {
