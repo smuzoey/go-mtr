@@ -1,4 +1,4 @@
-module github.com/wisdomatom/go-mtr
+module github.com/smuzoey/go-mtr
 
 go 1.17
 

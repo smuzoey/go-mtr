@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
+	go_mtr "github.com/smuzoey/go-mtr"
 	"github.com/spf13/cobra"
-	go_mtr "github.com/wisdomatom/go-mtr"
 )
 
 var (
@@ -76,7 +76,7 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Printf("trace param error (%v)", err)
 		return
 	}
-	res := tracer.BatchTrace([]go_mtr.Trace{*t}, uint8(ttlStart))
+	res, _ := tracer.BatchTrace([]go_mtr.Trace{*t}, uint8(ttlStart))
 	for _, r := range res {
 		fmt.Println("================not aggregate==============")
 		fmt.Println(r.Marshal())

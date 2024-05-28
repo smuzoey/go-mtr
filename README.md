@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/wisdomatom/go-mtr"
+	"github.com/smuzoey/go-mtr"
 	"time"
 )
 
@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	res := tracer.BatchTrace([]go_mtr.Trace{*t}, 1)
+	res, _ := tracer.BatchTrace([]go_mtr.Trace{*t}, 1)
 	for _, r := range res {
 		fmt.Println(r.Marshal())
 		fmt.Println(r.MarshalAggregate())
