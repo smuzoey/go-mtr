@@ -76,7 +76,11 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Printf("trace param error (%v)", err)
 		return
 	}
-	res, _ := tracer.BatchTrace([]go_mtr.Trace{*t}, uint8(ttlStart))
+	res, err := tracer.BatchTrace([]go_mtr.Trace{*t}, uint8(ttlStart))
+	if err != nil {
+		fmt.Println("batch trace error:", err)
+		return
+	}
 	for _, r := range res {
 		fmt.Println("================not aggregate==============")
 		fmt.Println(r.Marshal())
