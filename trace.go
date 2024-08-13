@@ -277,8 +277,10 @@ func (t *tracer) BatchTrace(data []Trace, startTTL uint8) ([]*TraceResult, error
 	if len(data) == 0 {
 		return nil, nil
 	}
-	probeChV4 := make(chan *SendProbe, 1024*1024)
-	probeChV6 := make(chan *SendProbe, 1024*1024)
+	//probeChV4 := make(chan *SendProbe, 1024*1024)
+	//probeChV6 := make(chan *SendProbe, 1024*1024)
+	probeChV4 := make(chan *SendProbe, 1024)
+	probeChV6 := make(chan *SendProbe, 1024)
 	go t.ipv4.detector.SteamProbe(probeChV4)
 	go t.ipv6.detector.SteamProbe(probeChV6)
 	defer func() {

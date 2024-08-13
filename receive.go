@@ -81,7 +81,8 @@ func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
 	if err != nil {
 		return nil, err
 	}
-	ch := make(chan *ICMPRcv, 100000)
+	//ch := make(chan *ICMPRcv, 100000)
+	ch := make(chan *ICMPRcv, 1024)
 	go func() {
 		for {
 			select {
