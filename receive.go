@@ -64,7 +64,7 @@ func (r *rcvIpv4) initSocket() error {
 	if err != nil {
 		return err
 	}
-	err = setSockOptRcvBuff(fd, 1024*1024*32)
+	err = setSockOptRcvBuff(fd, 1024*32)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
 		return nil, err
 	}
 	//ch := make(chan *ICMPRcv, 100000)
-	ch := make(chan *ICMPRcv, 1024)
+	ch := make(chan *ICMPRcv, 128)
 	go func() {
 		for {
 			select {

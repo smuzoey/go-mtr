@@ -78,7 +78,7 @@ func newRcvIpv4(conf Config) (Receiver, error) {
 }
 
 func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
-	ch := make(chan *ICMPRcv, 1024)
+	ch := make(chan *ICMPRcv, 128)
 	pktCh := r.pktSource.Packets()
 	for i := 0; i < 5; i++ {
 		go r.receive(pktCh, ch)
