@@ -87,10 +87,6 @@ func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
 		for {
 			select {
 			case <-r.ctx.Done():
-				err = unix.Close(r.fd)
-				if err != nil {
-					Error(r.ErrCh, err)
-				}
 				// close ch when ctx done
 				close(ch)
 				return
@@ -122,5 +118,9 @@ func (r *rcvIpv4) Receive() (chan *ICMPRcv, error) {
 }
 
 func (r *rcvIpv4) Close() {
+	err := unix.Close(r.fd)
+	if err != nil {
+		Error(r.ErrCh, err)
+	}
 	r.cancel()
 }
